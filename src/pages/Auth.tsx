@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Scale, Sparkles } from "lucide-react";
 import { z } from "zod";
@@ -23,6 +24,7 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
+    role: "user",
   });
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -32,7 +34,7 @@ const Auth = () => {
       const validated = authSchema.parse(formData);
       setLoading(true);
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
         options: {
@@ -44,6 +46,16 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
+      // Assign role if not default user
+      if (data.user && formData.role !== 'user') {
+        await supabase
+          .from('user_roles')
+          .insert([{
+            user_id: data.user.id,
+            role: formData.role as 'hr' | 'admin',
+          }]);
+      }
 
       toast.success("Account created! You're now logged in.");
       navigate("/");
@@ -183,6 +195,25 @@ const Auth = () => {
                 />
                 <p className="text-xs text-muted-foreground">
                   Must be at least 6 characters
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Account Type</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => setFormData({ ...formData, role: value })}
+                >
+                  <SelectTrigger className="bg-background/50">
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-card">
+                    <SelectItem value="user">Individual User</SelectItem>
+                    <SelectItem value="hr">Company/HR Account</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  HR accounts can manage company wage assessments
                 </p>
               </div>
 

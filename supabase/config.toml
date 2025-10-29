@@ -2,3 +2,6 @@ project_id = "vrpnrpokooqjmojyjzaz"
 
 [functions.assess-wage]
 verify_jwt = false
+
+[functions.assess-batch]
+verify_jwt = true

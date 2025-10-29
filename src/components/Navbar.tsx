@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Scale, LogOut, User, Brain } from "lucide-react";
+import { Scale, LogOut, User, Brain, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -16,6 +16,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isHR, setIsHR] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
 
@@ -23,15 +24,32 @@ const Navbar = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
+        if (session?.user) {
+          checkHRRole(session.user.id);
+        }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkHRRole(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkHRRole = async (userId: string) => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('role', 'hr')
+      .maybeSingle();
+    
+    setIsHR(!!data);
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -77,6 +95,17 @@ const Navbar = () => {
               >
                 Dashboard
               </Link>
+              {isHR && (
+                <Link
+                  to="/company"
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    isActive("/company") ? "text-primary" : "text-foreground/80"
+                  }`}
+                >
+                  <Building2 className="inline h-4 w-4 mr-1" />
+                  Company
+                </Link>
+              )}
             </>
           )}
           <Link
