@@ -90,7 +90,7 @@ python manage.py migrate
 
 # Run server
 python manage.py runserver
-
+```
 
 🧠 Future Enhancements
 
@@ -122,3 +122,4 @@ Project developed under the AI for Software Engineering specialization.
 ✨ Project Status: In Progress
 
 Development ongoing — integrating ML model and API for real-time wage fairness predictions.
+
