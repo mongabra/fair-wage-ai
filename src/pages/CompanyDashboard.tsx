@@ -399,12 +399,12 @@ const CompanyDashboard = () => {
                     </div>
 
                     <div>
-                      <Label>Current Wage (KES)</Label>
+                      <Label>Monthly Wage (KES)</Label>
                       <Input
                         type="number"
                         value={emp.currentWage}
                         onChange={(e) => updateEmployee(index, 'currentWage', e.target.value)}
-                        placeholder="Annual wage"
+                        placeholder="e.g., 100000"
                       />
                     </div>
                   </div>

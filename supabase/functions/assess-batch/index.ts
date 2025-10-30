@@ -63,7 +63,7 @@ Job Title: ${jobTitle}
 Education: ${education}
 Experience: ${experience} years
 Location: ${location}
-Current Annual Wage: KES ${currentWage}
+Monthly Wage: KES ${currentWage}
 
 Based on market standards for Kenya, assess if this wage is fair. Consider:
 1. Industry standards for this role
