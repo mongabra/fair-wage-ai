@@ -28,7 +28,7 @@ Job Title: ${jobTitle}
 Education: ${education}
 Experience: ${experience} years
 Location: ${location}
-Annual Wage: KES ${wage}
+Monthly Wage: KES ${wage}
 
 Based on market standards for Kenya, assess if this wage is fair. Consider:
 1. Industry standards for this role

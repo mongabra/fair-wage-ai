@@ -150,11 +150,11 @@ const Check = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wage">Annual Wage (KES)</Label>
+                    <Label htmlFor="wage">Monthly Wage (KES)</Label>
                     <Input
                       id="wage"
                       type="number"
-                      placeholder="e.g., 1200000"
+                      placeholder="e.g., 100000"
                       value={formData.wage}
                       onChange={(e) => setFormData({ ...formData, wage: e.target.value })}
                       required
