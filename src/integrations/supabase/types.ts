@@ -28,6 +28,7 @@ export type Database = {
           job_title: string
           location: string
           message: string | null
+          model_version: string | null
           predicted_wage: number | null
         }
         Insert: {
@@ -43,6 +44,7 @@ export type Database = {
           job_title: string
           location: string
           message?: string | null
+          model_version?: string | null
           predicted_wage?: number | null
         }
         Update: {
@@ -58,6 +60,7 @@ export type Database = {
           job_title?: string
           location?: string
           message?: string | null
+          model_version?: string | null
           predicted_wage?: number | null
         }
         Relationships: [
@@ -131,6 +134,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ml_model_versions: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          metrics: Json | null
+          model_file_url: string | null
+          model_type: string
+          training_date: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          metrics?: Json | null
+          model_file_url?: string | null
+          model_type: string
+          training_date?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          metrics?: Json | null
+          model_file_url?: string | null
+          model_type?: string
+          training_date?: string | null
+          version?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -276,6 +315,9 @@ export type Database = {
           job_title: string
           location: string
           message: string
+          model_version: string | null
+          predicted_wage: number | null
+          prediction_confidence: number | null
           user_id: string
           wage: number
         }
@@ -289,6 +331,9 @@ export type Database = {
           job_title: string
           location: string
           message: string
+          model_version?: string | null
+          predicted_wage?: number | null
+          prediction_confidence?: number | null
           user_id: string
           wage: number
         }
@@ -302,8 +347,101 @@ export type Database = {
           job_title?: string
           location?: string
           message?: string
+          model_version?: string | null
+          predicted_wage?: number | null
+          prediction_confidence?: number | null
           user_id?: string
           wage?: number
+        }
+        Relationships: []
+      }
+      wage_benchmarks: {
+        Row: {
+          base_wage: number
+          created_at: string | null
+          education: string
+          experience_max: number | null
+          experience_min: number | null
+          id: string
+          job_category: string
+          location: string
+          updated_at: string | null
+          wage_range_max: number
+          wage_range_min: number
+        }
+        Insert: {
+          base_wage: number
+          created_at?: string | null
+          education: string
+          experience_max?: number | null
+          experience_min?: number | null
+          id?: string
+          job_category: string
+          location: string
+          updated_at?: string | null
+          wage_range_max: number
+          wage_range_min: number
+        }
+        Update: {
+          base_wage?: number
+          created_at?: string | null
+          education?: string
+          experience_max?: number | null
+          experience_min?: number | null
+          id?: string
+          job_category?: string
+          location?: string
+          updated_at?: string | null
+          wage_range_max?: number
+          wage_range_min?: number
+        }
+        Relationships: []
+      }
+      wage_training_data: {
+        Row: {
+          actual_wage: number
+          created_at: string | null
+          data_source: string | null
+          education: string
+          experience: number
+          feedback_rating: number | null
+          id: string
+          industry: string | null
+          job_title: string
+          location: string
+          predicted_wage: number | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          actual_wage: number
+          created_at?: string | null
+          data_source?: string | null
+          education: string
+          experience: number
+          feedback_rating?: number | null
+          id?: string
+          industry?: string | null
+          job_title: string
+          location: string
+          predicted_wage?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          actual_wage?: number
+          created_at?: string | null
+          data_source?: string | null
+          education?: string
+          experience?: number
+          feedback_rating?: number | null
+          id?: string
+          industry?: string | null
+          job_title?: string
+          location?: string
+          predicted_wage?: number | null
+          user_id?: string | null
+          verified?: boolean | null
         }
         Relationships: []
       }
