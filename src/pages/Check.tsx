@@ -16,6 +16,8 @@ const Check = () => {
     status: string;
     confidence: number;
     message: string;
+    predictedWage?: number;
+    modelVersion?: string;
   } | null>(null);
 
   const [formData, setFormData] = useState({
@@ -181,48 +183,70 @@ const Check = () => {
               {result && (
                 <Card className="glass-card p-6 animate-fade-in">
                   <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">{getResultIcon()}</div>
-                      <div>
-                        <h3 className={`text-2xl font-bold ${getResultColor()}`}>
-                          {result.status}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          AI Confidence: {result.confidence}%
-                        </p>
+                    {/* ML Model Badge */}
+                    {result.modelVersion && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                        <Brain className="h-3 w-3" />
+                        ML Model {result.modelVersion} • {result.confidence}% confidence
                       </div>
+                    )}
+
+                    {/* Wage Comparison */}
+                    {result.predictedWage && (
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Your Current Wage</p>
+                          <p className="text-2xl font-bold">KES {Number(formData.wage).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Market Prediction</p>
+                          <p className="text-2xl font-bold text-primary">
+                            KES {result.predictedWage.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="col-span-2 pt-2 border-t border-border">
+                          <p className="text-sm text-muted-foreground mb-1">Difference</p>
+                          <p className={`text-lg font-semibold ${getResultColor()}`}>
+                            {(((Number(formData.wage) - result.predictedWage) / result.predictedWage) * 100).toFixed(1)}%
+                            {Number(formData.wage) < result.predictedWage ? ' below' : Number(formData.wage) > result.predictedWage ? ' above' : ' within'} market average
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Status and Explanation */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        {getResultIcon()}
+                        <div>
+                          <h3 className={`text-xl font-semibold ${getResultColor()}`}>
+                            {result.status}
+                          </h3>
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed">{result.message}</p>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="mb-2 font-semibold flex items-center gap-2">
-                          <Brain className="h-4 w-4 text-accent" />
-                          AI Assessment
-                        </h4>
-                        <p className="text-muted-foreground leading-relaxed">{result.message}</p>
-                      </div>
-
-                      <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
-                        <h4 className="mb-2 font-semibold">Your Details</h4>
-                        <dl className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Role:</dt>
-                            <dd className="font-medium">{formData.jobTitle}</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Education:</dt>
-                            <dd className="font-medium">{formData.education}</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Experience:</dt>
-                            <dd className="font-medium">{formData.experience} years</dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Location:</dt>
-                            <dd className="font-medium">{formData.location}</dd>
-                          </div>
-                        </dl>
-                      </div>
+                    <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+                      <h4 className="mb-2 font-semibold">Your Details</h4>
+                      <dl className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Role:</dt>
+                          <dd className="font-medium">{formData.jobTitle}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Education:</dt>
+                          <dd className="font-medium">{formData.education}</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Experience:</dt>
+                          <dd className="font-medium">{formData.experience} years</dd>
+                        </div>
+                        <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Location:</dt>
+                          <dd className="font-medium">{formData.location}</dd>
+                        </div>
+                      </dl>
                     </div>
                   </div>
                 </Card>

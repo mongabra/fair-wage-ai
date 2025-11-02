@@ -433,51 +433,83 @@ const CompanyDashboard = () => {
             <h2 className="text-xl font-bold mb-6">Assessment History</h2>
             <div className="space-y-4">
               {assessments.map((assessment) => (
-                <Card key={assessment.id} className="p-4 bg-background/50">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <h3 className="font-semibold mb-2">{assessment.employee_name}</h3>
-                      <dl className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Role:</dt>
-                          <dd className="font-medium">{assessment.job_title}</dd>
+                <Card key={assessment.id} className="p-6 bg-background/50">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">{assessment.employee_name}</h3>
+                        <p className="text-sm text-muted-foreground">{assessment.job_title}</p>
+                      </div>
+                      {assessment.model_version && (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                          <Brain className="h-3 w-3" />
+                          {assessment.model_version}
                         </div>
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Experience:</dt>
-                          <dd className="font-medium">{assessment.experience} years</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Location:</dt>
-                          <dd className="font-medium">{assessment.location}</dd>
-                        </div>
-                      </dl>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Education</p>
+                        <p className="font-medium">{assessment.education}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Experience</p>
+                        <p className="font-medium">{assessment.experience} years</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Location</p>
+                        <p className="font-medium">{assessment.location}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Confidence</p>
+                        <p className="font-medium">{assessment.confidence}%</p>
+                      </div>
                     </div>
 
-                    <div>
-                      <h4 className="font-semibold mb-2 text-primary">{assessment.assessment_status}</h4>
-                      <dl className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Current Wage:</dt>
-                          <dd className="font-medium">KES {assessment.current_wage.toLocaleString()}</dd>
+                    {/* Wage Comparison */}
+                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Current Wage</p>
+                        <p className="text-lg font-bold">KES {assessment.current_wage.toLocaleString()}</p>
+                      </div>
+                      {assessment.predicted_wage && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Market Average</p>
+                          <p className="text-lg font-bold text-primary">
+                            KES {assessment.predicted_wage.toLocaleString()}
+                          </p>
                         </div>
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Predicted Wage:</dt>
-                          <dd className="font-medium text-accent">KES {assessment.predicted_wage?.toLocaleString()}</dd>
+                      )}
+                      {assessment.predicted_wage && (
+                        <div className="col-span-2 pt-2 border-t border-border">
+                          <p className="text-xs text-muted-foreground mb-1">Gap</p>
+                          <p className={`text-sm font-semibold ${
+                            assessment.assessment_status === 'Below Market Average' ? 'text-red-600' :
+                            assessment.assessment_status === 'Above Market Average' ? 'text-blue-600' :
+                            'text-green-600'
+                          }`}>
+                            {(((assessment.current_wage - assessment.predicted_wage) / assessment.predicted_wage) * 100).toFixed(1)}%
+                            {assessment.current_wage < assessment.predicted_wage ? ' underpaid' : 
+                             assessment.current_wage > assessment.predicted_wage ? ' overpaid' : ' fair'}
+                          </p>
                         </div>
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Difference:</dt>
-                          <dd className={`font-medium ${(assessment.predicted_wage - assessment.current_wage) > 0 ? 'text-destructive' : 'text-accent'}`}>
-                            KES {Math.abs(assessment.predicted_wage - assessment.current_wage).toLocaleString()}
-                          </dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt className="text-muted-foreground">Confidence:</dt>
-                          <dd className="font-medium">{assessment.confidence}%</dd>
-                        </div>
-                      </dl>
+                      )}
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                          assessment.assessment_status === 'Below Market Average' ? 'bg-red-100 text-red-800' :
+                          assessment.assessment_status === 'Above Market Average' ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {assessment.assessment_status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{assessment.message}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-3 pt-3 border-t">{assessment.message}</p>
                 </Card>
               ))}
 

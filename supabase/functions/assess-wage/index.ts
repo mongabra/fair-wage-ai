@@ -16,38 +16,67 @@ serve(async (req) => {
     
     console.log('Assessing wage for:', { jobTitle, education, experience, location, wage });
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Step 1: Get ML prediction first
+    console.log('Calling ML prediction function...');
+    const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml', {
+      body: { jobTitle, education, experience, location }
+    });
+
+    if (mlError) {
+      console.error('ML prediction error:', mlError);
+      throw new Error('Failed to get wage prediction');
+    }
+
+    const { predictedWage, confidence: mlConfidence, modelVersion } = mlResult;
+    console.log('ML prediction:', { predictedWage, mlConfidence, modelVersion });
+
+    // Step 2: Calculate wage status based on ML prediction
+    const wageDifference = (Number(wage) - predictedWage) / predictedWage;
+    const percentageDiff = (wageDifference * 100).toFixed(1);
+    
+    let status: string;
+    if (wageDifference < -0.15) {
+      status = "Below Market Average";
+    } else if (wageDifference > 0.15) {
+      status = "Above Market Average";
+    } else {
+      status = "Fair Wage";
+    }
+
+    console.log('Wage status:', status, 'Difference:', percentageDiff + '%');
+
+    // Step 3: Get AI explanation with ML context
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Create prompt for AI wage assessment
-    const prompt = `As a wage fairness expert, analyze this employment situation:
+    // Create enhanced prompt with ML prediction
+    const prompt = `As a wage fairness expert, provide context and explanation for this wage assessment:
 
 Job Title: ${jobTitle}
 Education: ${education}
 Experience: ${experience} years
 Location: ${location}
-Monthly Wage: KES ${wage}
+Current Monthly Wage: KES ${wage}
+ML Predicted Fair Wage: KES ${predictedWage}
+Difference: ${percentageDiff}%
+Status: ${status}
 
-Based on market standards for Kenya, assess if this wage is fair. Consider:
-1. Industry standards for this role
-2. Education requirements and compensation
-3. Experience level impact on salary
-4. Cost of living in ${location}
-5. Current market trends in Kenya
+The ML model has determined the fair market wage based on Kenya labor market data. Provide a brief, actionable explanation (2-3 sentences) that:
 
-Provide:
-1. A status: "Below Market Average", "Fair Wage", or "Above Market Average"
-2. A confidence score (0-100)
-3. A brief explanation (2-3 sentences)
+1. Explains why the current wage is ${status.toLowerCase()}
+2. Mentions key factors (education, experience, location impact)
+3. Provides actionable insight if wage is below market
 
-Format your response as JSON:
-{
-  "status": "status here",
-  "confidence": number,
-  "message": "explanation here"
-}`;
+Keep it conversational and supportive. Focus on facts from the ML analysis.
+
+Format as plain text (not JSON), 2-3 sentences only.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -58,7 +87,7 @@ Format your response as JSON:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a wage fairness analyst. Always respond with valid JSON.' },
+          { role: 'system', content: 'You are a helpful wage fairness analyst. Provide clear, concise explanations.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
@@ -82,33 +111,20 @@ Format your response as JSON:
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const aiExplanation = data.choices[0].message.content.trim();
     
-    console.log('AI response:', aiResponse);
+    console.log('AI explanation:', aiExplanation);
 
-    // Parse AI response
-    let result;
-    try {
-      // Try to extract JSON from markdown code blocks if present
-      const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
-                       aiResponse.match(/```\n([\s\S]*?)\n```/) ||
-                       [null, aiResponse];
-      result = JSON.parse(jsonMatch[1] || aiResponse);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      // Fallback to simple assessment
-      result = {
-        status: "Fair Wage",
-        confidence: 70,
-        message: "Unable to perform detailed analysis. This appears to be a reasonable wage for the given role and experience."
-      };
-    }
+    // Combine ML prediction with AI explanation
+    const result = {
+      status,
+      confidence: mlConfidence,
+      message: aiExplanation,
+      predictedWage,
+      modelVersion,
+    };
 
-    // Save assessment to database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
+    // Step 4: Save enhanced assessment to database
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
@@ -125,6 +141,9 @@ Format your response as JSON:
           assessment_status: result.status,
           confidence: result.confidence,
           message: result.message,
+          predicted_wage: predictedWage,
+          model_version: modelVersion,
+          prediction_confidence: mlConfidence,
         });
       }
     }

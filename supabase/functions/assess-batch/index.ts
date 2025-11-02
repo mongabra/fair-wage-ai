@@ -53,83 +53,46 @@ serve(async (req) => {
 
     const results = [];
 
-    // Process each employee
+    // Process each employee with ML predictions
     for (const employee of employees) {
       const { employeeName, jobTitle, education, experience, location, currentWage } = employee;
       
-      const prompt = `As a wage fairness expert, analyze this employment situation:
-
-Job Title: ${jobTitle}
-Education: ${education}
-Experience: ${experience} years
-Location: ${location}
-Monthly Wage: KES ${currentWage}
-
-Based on market standards for Kenya, assess if this wage is fair. Consider:
-1. Industry standards for this role
-2. Education requirements and compensation
-3. Experience level impact on salary
-4. Cost of living in ${location}
-5. Current market trends in Kenya
-
-Provide:
-1. A predicted fair wage (number only)
-2. A status: "Below Market Average", "Fair Wage", or "Above Market Average"
-3. A confidence score (0-100)
-4. A brief explanation (2-3 sentences)
-
-Format your response as JSON:
-{
-  "predictedWage": number,
-  "status": "status here",
-  "confidence": number,
-  "message": "explanation here"
-}`;
-
       try {
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { role: 'system', content: 'You are a wage fairness analyst. Always respond with valid JSON.' },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0.7,
-          }),
+        // Step 1: Get ML prediction (fast and free)
+        console.log(`Getting ML prediction for ${employeeName}...`);
+        const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml', {
+          body: { jobTitle, education, experience, location }
         });
 
-        if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error("Rate limit exceeded. Please try again later.");
-          }
-          if (response.status === 402) {
-            throw new Error("AI credits exhausted. Please contact support.");
-          }
-          throw new Error(`AI API error: ${response.status}`);
+        if (mlError) {
+          console.error('ML prediction error:', mlError);
+          throw new Error('Failed to get wage prediction');
         }
 
-        const data = await response.json();
-        const aiResponse = data.choices[0].message.content;
+        const { predictedWage, confidence: mlConfidence, modelVersion } = mlResult;
+        console.log(`ML prediction for ${employeeName}:`, { predictedWage, mlConfidence });
+
+        // Step 2: Calculate wage status
+        const wageDifference = (Number(currentWage) - predictedWage) / predictedWage;
+        const percentageDiff = (wageDifference * 100).toFixed(1);
         
-        let result;
-        try {
-          const jsonMatch = aiResponse.match(/```json\n([\s\S]*?)\n```/) || 
-                           aiResponse.match(/```\n([\s\S]*?)\n```/) ||
-                           [null, aiResponse];
-          result = JSON.parse(jsonMatch[1] || aiResponse);
-        } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
-          result = {
-            predictedWage: currentWage,
-            status: "Fair Wage",
-            confidence: 70,
-            message: "Unable to perform detailed analysis."
-          };
+        let status: string;
+        if (wageDifference < -0.15) {
+          status = "Below Market Average";
+        } else if (wageDifference > 0.15) {
+          status = "Above Market Average";
+        } else {
+          status = "Fair Wage";
+        }
+
+        // Step 3: Generate simple message (without AI to save credits)
+        let message = '';
+        if (status === "Below Market Average") {
+          message = `This wage is ${Math.abs(parseFloat(percentageDiff))}% below the market average of KES ${predictedWage.toLocaleString()} for this role, education level, and location.`;
+        } else if (status === "Above Market Average") {
+          message = `This wage is ${parseFloat(percentageDiff)}% above the market average of KES ${predictedWage.toLocaleString()} for this role, education level, and location.`;
+        } else {
+          message = `This wage is within the fair market range (within 15% of KES ${predictedWage.toLocaleString()}) for this role, education level, and location.`;
         }
 
         // Save to batch_assessments
@@ -141,15 +104,19 @@ Format your response as JSON:
           experience: parseInt(experience),
           location: location,
           current_wage: parseFloat(currentWage),
-          predicted_wage: result.predictedWage,
-          assessment_status: result.status,
-          confidence: result.confidence,
-          message: result.message,
+          predicted_wage: predictedWage,
+          assessment_status: status,
+          confidence: mlConfidence,
+          message: message,
+          model_version: modelVersion,
         });
 
         results.push({
           employeeName,
-          ...result
+          predictedWage,
+          status,
+          confidence: mlConfidence,
+          message,
         });
 
       } catch (error) {

@@ -1,5 +1,8 @@
 project_id = "vrpnrpokooqjmojyjzaz"
 
+[functions.predict-wage-ml]
+verify_jwt = false
+
 [functions.assess-wage]
 verify_jwt = false
 
