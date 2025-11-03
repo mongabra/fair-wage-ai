@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import { toast } from "sonner";
-import { TrendingDown, TrendingUp, CheckCircle, Brain, Sparkles } from "lucide-react";
+import { TrendingDown, TrendingUp, CheckCircle, Brain, Sparkles, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Progress } from "@/components/ui/progress";
 
 const Check = () => {
   const [loading, setLoading] = useState(false);
@@ -183,13 +184,32 @@ const Check = () => {
               {result && (
                 <Card className="glass-card p-6 animate-fade-in">
                   <div className="space-y-6">
-                    {/* ML Model Badge */}
+                     {/* ML Model Badge */}
                     {result.modelVersion && (
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                        <Brain className="h-3 w-3" />
-                        ML Model {result.modelVersion} • {result.confidence}% confidence
+                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                        result.confidence >= 80 
+                          ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' 
+                          : 'bg-primary/10 text-primary border border-primary/20'
+                      }`}>
+                        <Brain className="h-3.5 w-3.5" />
+                        ML Model {result.modelVersion} • Ensemble
                       </div>
                     )}
+
+                    {/* Confidence Score */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Confidence Score:</span>
+                        <span className="text-lg font-semibold">{result.confidence}%</span>
+                      </div>
+                      <Progress value={result.confidence} className="h-2" />
+                      {result.confidence >= 80 && (
+                        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                          <Zap className="h-3 w-3" />
+                          <span>High confidence prediction</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Wage Comparison */}
                     {result.predictedWage && (

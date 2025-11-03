@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Navbar from "@/components/Navbar";
 import AuthGuard from "@/components/AuthGuard";
 import { toast } from "sonner";
-import { Building2, Upload, Users, TrendingUp, Brain, Plus, X } from "lucide-react";
+import { Building2, Upload, Users, TrendingUp, Brain, Plus, X, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 interface Employee {
   employeeName: string;
@@ -460,11 +461,20 @@ const CompanyDashboard = () => {
                       <div>
                         <p className="text-muted-foreground">Location</p>
                         <p className="font-medium">{assessment.location}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Confidence</p>
-                        <p className="font-medium">{assessment.confidence}%</p>
-                      </div>
+                       </div>
+                       <div>
+                         <p className="text-muted-foreground">Confidence</p>
+                         <div className="space-y-1">
+                           <p className="font-medium">{assessment.confidence}%</p>
+                           <Progress value={assessment.confidence || 0} className="h-1.5" />
+                           {assessment.confidence && assessment.confidence >= 80 && (
+                             <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                               <Zap className="h-3 w-3" />
+                               <span>High</span>
+                             </div>
+                           )}
+                         </div>
+                       </div>
                     </div>
 
                     {/* Wage Comparison */}

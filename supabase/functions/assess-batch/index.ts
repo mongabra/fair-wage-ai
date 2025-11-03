@@ -58,9 +58,9 @@ serve(async (req) => {
       const { employeeName, jobTitle, education, experience, location, currentWage } = employee;
       
       try {
-        // Step 1: Get ML prediction (fast and free)
-        console.log(`Getting ML prediction for ${employeeName}...`);
-        const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml', {
+        // Step 1: Get ML prediction v2 (fast and free)
+        console.log(`Getting ML prediction v2 for ${employeeName}...`);
+        const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml-v2', {
           body: { jobTitle, education, experience, location }
         });
 

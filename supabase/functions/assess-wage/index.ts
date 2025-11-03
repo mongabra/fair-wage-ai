@@ -21,9 +21,9 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Step 1: Get ML prediction first
-    console.log('Calling ML prediction function...');
-    const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml', {
+    // Step 1: Get ML prediction (using v2 model)
+    console.log('Calling ML prediction v2 function...');
+    const { data: mlResult, error: mlError } = await supabase.functions.invoke('predict-wage-ml-v2', {
       body: { jobTitle, education, experience, location }
     });
 
