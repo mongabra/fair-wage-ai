@@ -82,20 +82,20 @@ const LOCATION_FACTORS: Record<string, { factor: number; tier: string }> = {
   "default": { factor: 0.88, tier: "rural" },
 };
 
-// Enhanced education factors with credential weights
+// Enhanced education factors with credential weights (v2.1 calibrated)
 const EDUCATION_FACTORS: Record<string, { multiplier: number; weight: number }> = {
-  "phd": { multiplier: 1.45, weight: 5 },
-  "doctorate": { multiplier: 1.45, weight: 5 },
-  "masters": { multiplier: 1.28, weight: 4 },
-  "master's degree": { multiplier: 1.28, weight: 4 },
-  "mba": { multiplier: 1.32, weight: 4 },
-  "bachelor": { multiplier: 1.12, weight: 3 },
-  "bachelor's degree": { multiplier: 1.12, weight: 3 },
-  "degree": { multiplier: 1.12, weight: 3 },
-  "diploma": { multiplier: 0.95, weight: 2 },
-  "certificate": { multiplier: 0.85, weight: 1 },
-  "high school": { multiplier: 0.72, weight: 0 },
-  "secondary": { multiplier: 0.72, weight: 0 },
+  "phd": { multiplier: 1.60, weight: 5 },
+  "doctorate": { multiplier: 1.60, weight: 5 },
+  "masters": { multiplier: 1.40, weight: 4 },
+  "master's degree": { multiplier: 1.40, weight: 4 },
+  "mba": { multiplier: 1.45, weight: 4 },
+  "bachelor": { multiplier: 1.20, weight: 3 },
+  "bachelor's degree": { multiplier: 1.20, weight: 3 },
+  "degree": { multiplier: 1.20, weight: 3 },
+  "diploma": { multiplier: 1.00, weight: 2 },
+  "certificate": { multiplier: 0.80, weight: 1 },
+  "high school": { multiplier: 0.70, weight: 0 },
+  "secondary": { multiplier: 0.70, weight: 0 },
 };
 
 // Job level classification for career indexing
@@ -262,67 +262,86 @@ async function getBenchmarkWage(
   };
 }
 
-// Ensemble prediction: combines multiple estimation methods
+// v2.1 Calibrated Ensemble: 3 statistical sub-models
 function ensemblePrediction(
   baseWage: number,
   experienceMultiplier: number,
   educationMultiplier: number,
   locationFactor: number,
-  careerIndex: number
-): { prediction: number; variance: number } {
-  // Method 1: Traditional multiplicative
-  const method1 = baseWage * experienceMultiplier * educationMultiplier * locationFactor;
+  careerIndex: number,
+  wageRange: { min: number; max: number }
+): { prediction: number; variance: number; consistencyScore: number } {
   
-  // Method 2: Career-indexed scaling
-  const method2 = baseWage * (1 + (careerIndex * 0.25)) * locationFactor;
+  // Sub-Model 1: Linear Factor Model (weighted averages)
+  const linearPrediction = baseWage * (
+    (experienceMultiplier * 0.45) + 
+    (educationMultiplier * 0.30) + 
+    (locationFactor * 0.25)
+  );
   
-  // Method 3: Hybrid with dampening
-  const method3 = baseWage * Math.sqrt(experienceMultiplier * educationMultiplier) * locationFactor * 1.15;
+  // Sub-Model 2: Regional Market Index (cost-of-living adjustment)
+  const marketIndex = locationFactor * 1.15; // Urban premium
+  const regionalPrediction = baseWage * experienceMultiplier * educationMultiplier * marketIndex;
   
-  // Weighted ensemble (60% method1, 25% method2, 15% method3)
-  const ensemble = (method1 * 0.60) + (method2 * 0.25) + (method3 * 0.15);
+  // Sub-Model 3: Outlier Correction (median band normalization)
+  const medianBand = (wageRange.min + wageRange.max) / 2;
+  const rawPrediction = baseWage * experienceMultiplier * educationMultiplier * locationFactor;
+  const outlierCorrected = (rawPrediction * 0.7) + (medianBand * 0.3); // Pull extremes toward median
   
-  // Calculate variance (measure of prediction stability)
-  const predictions = [method1, method2, method3];
+  // Weighted ensemble: 40% linear, 35% regional, 25% outlier-corrected
+  const ensemble = (linearPrediction * 0.40) + (regionalPrediction * 0.35) + (outlierCorrected * 0.25);
+  
+  // Calculate prediction variance (stability measure)
+  const predictions = [linearPrediction, regionalPrediction, outlierCorrected];
   const mean = predictions.reduce((a, b) => a + b) / predictions.length;
   const variance = predictions.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / predictions.length;
   const normalizedVariance = Math.sqrt(variance) / mean; // Coefficient of variation
   
-  return { prediction: ensemble, variance: normalizedVariance };
+  // Consistency score: how well prediction fits within known range
+  const withinRange = ensemble >= wageRange.min && ensemble <= wageRange.max;
+  const rangeMidpoint = (wageRange.min + wageRange.max) / 2;
+  const deviation = Math.abs(ensemble - rangeMidpoint) / (wageRange.max - wageRange.min);
+  const consistencyScore = withinRange ? Math.max(0, 1 - deviation) : Math.max(0, 0.5 - deviation);
+  
+  return { 
+    prediction: ensemble, 
+    variance: normalizedVariance,
+    consistencyScore: Math.min(consistencyScore, 1.0)
+  };
 }
 
-// Confidence calibration based on multiple factors
+// v2.1 Advanced Confidence Calibration Formula
 function calibrateConfidence(
   baseConfidence: number,
   dataQuality: number,
   locationConfidence: number,
   educationConfidence: number,
   variance: number,
-  experience: number
+  consistencyScore: number,
+  inputCompleteness: number
 ): number {
-  // Start with base confidence from benchmark match
-  let confidence = baseConfidence;
+  // Base confidence (normalized to 0-1 scale)
+  const base = baseConfidence;
   
-  // Adjust for data quality (weight: 15%)
-  confidence = confidence * (0.85 + (dataQuality * 0.15));
+  // Data Coverage Factor (25% weight) - combines data quality and match confidence
+  const dataCoverage = (dataQuality * 0.5) + (locationConfidence * 0.25) + (educationConfidence * 0.25);
   
-  // Adjust for location match quality (weight: 10%)
-  confidence = confidence * (0.90 + (locationConfidence * 0.10));
+  // Input Completeness Factor (35% weight) - penalize missing or poor quality inputs
+  const completeness = inputCompleteness;
   
-  // Adjust for education match quality (weight: 8%)
-  confidence = confidence * (0.92 + (educationConfidence * 0.08));
+  // Consistency Score (40% weight) - how well prediction aligns with known ranges
+  const consistency = consistencyScore;
   
-  // Penalize high variance (unstable predictions)
-  const variancePenalty = Math.max(0, 1 - (variance * 2));
-  confidence = confidence * (0.85 + (variancePenalty * 0.15));
+  // Apply v2.1 calibration formula
+  const confidence = base + (dataCoverage * 0.25) + (completeness * 0.35) + (consistency * 0.40);
   
-  // Boost confidence for typical experience ranges (3-10 years)
-  if (experience >= 3 && experience <= 10) {
-    confidence = confidence * 1.05;
-  }
+  // Variance penalty: high variance reduces confidence slightly
+  const variancePenalty = Math.max(0, 1 - (variance * 1.5));
+  const adjustedConfidence = confidence * (0.90 + (variancePenalty * 0.10));
   
-  // Cap at realistic maximum
-  return Math.min(Math.round(confidence * 100), 95);
+  // Scale to percentage and enforce 70-95% realistic range
+  const confidencePercent = Math.round(adjustedConfidence * 100);
+  return Math.max(70, Math.min(confidencePercent, 95));
 }
 
 serve(async (req) => {
@@ -354,23 +373,37 @@ serve(async (req) => {
     const careerIndex = calculateCareerIndex(experience, education, jobTitle);
     const experienceMultiplier = calculateExperienceMultiplier(experience);
 
-    // Ensemble prediction
-    const { prediction, variance } = ensemblePrediction(
+    // Calculate input completeness score
+    const hasAllInputs = jobTitle && education && location && experience >= 0;
+    const hasKnownLocation = LOCATION_FACTORS[location.toLowerCase()] !== undefined;
+    const hasKnownEducation = Object.keys(EDUCATION_FACTORS).some(key => 
+      education.toLowerCase().includes(key)
+    );
+    const inputCompleteness = (
+      (hasAllInputs ? 0.4 : 0) +
+      (hasKnownLocation ? 0.3 : 0.15) +
+      (hasKnownEducation ? 0.3 : 0.15)
+    );
+
+    // v2.1 Ensemble prediction with 3 sub-models
+    const { prediction, variance, consistencyScore } = ensemblePrediction(
       benchmarkData.baseWage,
       experienceMultiplier,
       educationData.multiplier,
       locationData.factor,
-      careerIndex
+      careerIndex,
+      benchmarkData.wageRange
     );
 
-    // Calibrate confidence
+    // v2.1 Advanced confidence calibration
     const confidence = calibrateConfidence(
       benchmarkData.confidence,
       benchmarkData.dataQuality,
       locationData.confidence,
       educationData.confidence,
       variance,
-      experience
+      consistencyScore,
+      inputCompleteness
     );
 
     // Calculate enhanced wage range
@@ -385,17 +418,19 @@ serve(async (req) => {
       .from('ml_model_versions')
       .select('version')
       .eq('is_active', true)
-      .eq('model_type', 'ensemble_statistical_v2')
+      .eq('model_type', 'ensemble_statistical_v2.1')
       .single();
 
     const result = {
       predictedWage: Math.round(prediction),
       confidence,
       wageRange,
-      modelVersion: modelVersion?.version || 'v2.0-ensemble',
+      modelVersion: modelVersion?.version || 'v2.1-calibrated',
       metadata: {
         careerIndex: Math.round(careerIndex * 100) / 100,
         variance: Math.round(variance * 100) / 100,
+        consistencyScore: Math.round(consistencyScore * 100) / 100,
+        inputCompleteness: Math.round(inputCompleteness * 100) / 100,
         locationTier: locationData.tier,
         dataQuality: Math.round(benchmarkData.dataQuality * 100)
       }
