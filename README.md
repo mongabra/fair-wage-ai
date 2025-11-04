@@ -42,30 +42,32 @@ The project contributes to **UN Sustainable Development Goal 8 – Decent Work a
 |-------|-------------|
 | **Frontend** | React • TypeScript • Tailwind CSS • Vite |
 | **Backend** | Lovable Cloud (Supabase) |
-| **Machine Learning** | Custom ML algorithms in Edge Functions |
+| **AI Engine** | Google Gemini 2.5 Flash (via Lovable AI Gateway) |
 | **Database** | PostgreSQL (via Lovable Cloud) |
-| **AI Integration** | Lovable AI (Gemini 2.5) |
 | **Authentication** | Supabase Auth |
 | **Hosting/Deployment** | Lovable Platform |
 
 ---
 
-## 📊 Machine Learning
-MalipoHaki uses a custom ML prediction algorithm that:
-- Normalizes job titles, education levels, experience, and location data
-- Applies weighted factors based on industry standards
-- Predicts fair wage ranges using statistical normalization
-- Provides confidence scores for each prediction
-- Leverages Lovable AI (Gemini 2.5) for contextual explanations and fairness assessments
+## 🤖 AI-Powered Wage Analysis
+MalipoHaki uses **Google Gemini 2.5 Flash** (via Lovable AI Gateway) for intelligent wage predictions:
+- **No traditional ML training required** – leverages Gemini's pre-trained knowledge of:
+  - Kenya's job market and industry standards
+  - Cost of living variations across counties
+  - Education and experience impact on compensation
+  - Current market rates for similar roles
+- **Prompt-engineered analysis** – sends job details to the AI with carefully crafted prompts
+- **Real-time predictions** – generates fair wage estimates, confidence scores, and reasoning instantly
+- **Contextual explanations** – provides detailed, actionable insights about wage fairness
 
 ---
 
 ## 🧩 System Architecture
 1. **Frontend (React):** Clean, responsive UI built with React, TypeScript, and Tailwind CSS
-2. **Backend (Lovable Cloud):** Serverless edge functions handle business logic and ML predictions
-3. **ML Algorithm:** Custom prediction engine in edge functions with normalization and weighted factors
+2. **Backend (Lovable Cloud):** Serverless edge functions handle business logic and API orchestration
+3. **AI Engine:** Google Gemini 2.5 Flash analyzes job profiles and predicts fair wages in real-time
 4. **Database (PostgreSQL):** Stores wage assessments, benchmarks, and user data with RLS security
-5. **AI Integration:** Lovable AI (Gemini 2.5) generates detailed fairness explanations and insights
+5. **AI Gateway:** Lovable AI Gateway provides seamless access to Gemini models without API key management
 6. **Authentication:** Secure user authentication with email/password via Supabase Auth
 
 ---
@@ -93,11 +95,12 @@ The application uses Lovable Cloud for backend services, which is automatically 
 
 ## 🧠 Future Enhancements
 - Wage visualization charts for HR dashboards
+- CSV bulk upload for large-scale employee assessments
 - Geolocation-based cost-of-living adjustments
 - Integration with national labor databases
 - Improved multilingual support (Swahili + English)
 - AI-driven policy recommendations
-- Enhanced ML model with larger datasets
+- Advanced AI model experimentation (GPT-5, Gemini Pro)
 
 ## 🤝 Contributing
 Contributions are welcome! Fork the repo, create a new branch, and open a pull request describing your improvement.
@@ -111,4 +114,4 @@ Upcoming Economist & Statistician | Software Developer
 Project developed under the AI for Software Engineering specialization.
 
 ## ✨ Project Status: Live
-Fully functional application with ML-powered wage predictions, AI-generated insights, and company dashboard features.
+Fully functional application with AI-powered wage predictions using Google Gemini 2.5 Flash, intelligent insights, and company dashboard features.
