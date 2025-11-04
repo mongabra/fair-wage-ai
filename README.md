@@ -62,6 +62,57 @@ MalipoHaki uses **Google Gemini 2.5 Flash** (via Lovable AI Gateway) for intelli
 
 ---
 
+## ⚠️ Known Limitations & Potential Biases
+
+### Model Limitations
+As MalipoHaki relies on **Google Gemini 2.5 Flash**, an AI model trained on global data, users should be aware of the following potential biases and limitations:
+
+#### 1. **Training Data Bias**
+- Gemini's training data may not adequately represent Kenya's job market, particularly:
+  - Informal sector wages (which comprise a significant portion of Kenya's economy)
+  - Rural and remote area compensation standards
+  - Emerging industries and non-traditional roles
+
+#### 2. **Geographic & Regional Bias**
+- The model may overweight data from urban centers (Nairobi, Mombasa) due to data availability
+- Wage predictions for smaller towns and rural areas may be less accurate
+- Cost-of-living adjustments may not fully capture local economic realities
+
+#### 3. **Temporal Bias**
+- AI model knowledge may be outdated compared to rapidly changing market conditions
+- Recent economic shifts (inflation, policy changes) may not be reflected
+- Currency fluctuations and economic volatility may not be adequately modeled
+
+#### 4. **Industry Representation**
+- Well-documented industries (tech, finance, healthcare) likely have more accurate predictions
+- Underrepresented sectors may receive less reliable wage estimates
+- Emerging roles and gig economy positions may lack sufficient reference data
+
+#### 5. **Socioeconomic Factors**
+- The model may not fully account for:
+  - Gender wage gaps in specific industries
+  - Discrimination based on ethnicity, age, or disability
+  - Company size variations (SMEs vs. multinationals)
+  - Public vs. private sector differences
+
+#### 6. **Lack of Local Nuance**
+- Kenya-specific factors may be underweighted:
+  - Union representation and collective bargaining
+  - Government wage policies and guidelines
+  - Industry-specific certifications and local qualifications
+  - Cultural and social factors affecting compensation
+
+### Our Commitment
+We acknowledge these limitations and are committed to:
+- **Transparency**: Clearly communicating confidence scores and limitations
+- **Continuous Improvement**: Monitoring prediction accuracy and adjusting prompts
+- **User Feedback**: Collecting real-world data to identify systematic biases
+- **Responsible AI**: Encouraging users to use predictions as guidance, not absolute truth
+
+**Important**: MalipoHaki predictions should be used as **reference points** for wage discussions, not as definitive assessments. We encourage users to combine AI insights with local market research, industry reports, and professional advice.
+
+---
+
 ## 🧩 System Architecture
 1. **Frontend (React):** Clean, responsive UI built with React, TypeScript, and Tailwind CSS
 2. **Backend (Lovable Cloud):** Serverless edge functions handle business logic and API orchestration
