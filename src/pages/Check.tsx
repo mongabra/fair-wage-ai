@@ -192,7 +192,7 @@ const Check = () => {
                           : 'bg-primary/10 text-primary border border-primary/20'
                       }`}>
                         <Brain className="h-3.5 w-3.5" />
-                        ML Model {result.modelVersion} • Ensemble
+                        Model {result.modelVersion || 'v2.1-calibrated'} – Calibrated Ensemble
                       </div>
                     )}
 
@@ -200,14 +200,18 @@ const Check = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Confidence Score:</span>
-                        <span className="text-lg font-semibold">{result.confidence}%</span>
-                      </div>
-                      <Progress value={result.confidence} className="h-2" />
-                      {result.confidence >= 80 && (
-                        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                          <Zap className="h-3 w-3" />
-                          <span>High confidence prediction</span>
+                        <div className="flex items-center gap-2">
+                          {result.confidence >= 80 && (
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                          )}
+                          <span className="text-lg font-semibold">{result.confidence}%</span>
                         </div>
+                      </div>
+                      <Progress value={result.confidence} className="h-3" />
+                      {result.confidence >= 80 && (
+                        <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                          High confidence prediction
+                        </p>
                       )}
                     </div>
 

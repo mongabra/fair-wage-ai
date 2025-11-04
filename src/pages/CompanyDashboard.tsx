@@ -442,7 +442,11 @@ const CompanyDashboard = () => {
                         <p className="text-sm text-muted-foreground">{assessment.job_title}</p>
                       </div>
                       {assessment.model_version && (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium">
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${
+                          (assessment.confidence || 0) >= 80
+                            ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
+                            : 'bg-primary/10 text-primary'
+                        }`}>
                           <Brain className="h-3 w-3" />
                           {assessment.model_version}
                         </div>
@@ -465,13 +469,15 @@ const CompanyDashboard = () => {
                        <div>
                          <p className="text-muted-foreground">Confidence</p>
                          <div className="space-y-1">
-                           <p className="font-medium">{assessment.confidence}%</p>
-                           <Progress value={assessment.confidence || 0} className="h-1.5" />
+                           <div className="flex items-center gap-2">
+                             {assessment.confidence && assessment.confidence >= 80 && (
+                               <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                             )}
+                             <p className="font-medium">{assessment.confidence}%</p>
+                           </div>
+                           <Progress value={assessment.confidence || 0} className="h-2" />
                            {assessment.confidence && assessment.confidence >= 80 && (
-                             <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                               <Zap className="h-3 w-3" />
-                               <span>High</span>
-                             </div>
+                             <p className="text-xs text-green-600 dark:text-green-400 font-medium">High</p>
                            )}
                          </div>
                        </div>
