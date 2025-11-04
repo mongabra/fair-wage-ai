@@ -192,7 +192,7 @@ const Check = () => {
                           : 'bg-primary/10 text-primary border border-primary/20'
                       }`}>
                         <Brain className="h-3.5 w-3.5" />
-                        Model {result.modelVersion || 'v2.1-calibrated'} – Calibrated Ensemble
+                        Model {result.modelVersion || 'v3.0-ai-powered'} – AI-Powered
                       </div>
                     )}
 
