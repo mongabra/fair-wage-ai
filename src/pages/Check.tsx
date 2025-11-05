@@ -147,6 +147,16 @@ const Check = () => {
                         <SelectItem value="mombasa">Mombasa</SelectItem>
                         <SelectItem value="kisumu">Kisumu</SelectItem>
                         <SelectItem value="nakuru">Nakuru</SelectItem>
+                        <SelectItem value="eldoret">Eldoret</SelectItem>
+                        <SelectItem value="thika">Thika</SelectItem>
+                        <SelectItem value="malindi">Malindi</SelectItem>
+                        <SelectItem value="garissa">Garissa</SelectItem>
+                        <SelectItem value="nyeri">Nyeri</SelectItem>
+                        <SelectItem value="kakamega">Kakamega</SelectItem>
+                        <SelectItem value="machakos">Machakos</SelectItem>
+                        <SelectItem value="kericho">Kericho</SelectItem>
+                        <SelectItem value="kitale">Kitale</SelectItem>
+                        <SelectItem value="embu">Embu</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
