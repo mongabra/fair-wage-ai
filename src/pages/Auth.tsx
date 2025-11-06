@@ -34,28 +34,19 @@ const Auth = () => {
       const validated = authSchema.parse(formData);
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: validated.email,
         password: validated.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: formData.fullName,
+            role: formData.role, // Store role in metadata for trigger to process
           },
         },
       });
 
       if (error) throw error;
-
-      // Assign role if not default user
-      if (data.user && formData.role !== 'user') {
-        await supabase
-          .from('user_roles')
-          .insert([{
-            user_id: data.user.id,
-            role: formData.role as 'hr' | 'admin',
-          }]);
-      }
 
       toast.success("Account created! You're now logged in.");
       navigate("/");
