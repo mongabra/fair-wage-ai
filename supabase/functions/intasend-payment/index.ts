@@ -130,21 +130,20 @@ serve(async (req) => {
     const envMode = (Deno.env.get('INTASEND_ENV') || 'test').toLowerCase();
     const baseUrl = envMode === 'live' ? 'https://payment.intasend.com' : 'https://sandbox.intasend.com';
 
-    // Create Intasend collection (sandbox/live based on env)
-    const intasendResponse = await fetch(`${baseUrl}/api/v1/payment/collection/`, {
+    const intasendResponse = await fetch(`${baseUrl}/api/v1/checkout/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${intasendSecretKey}`,
       },
       body: JSON.stringify({
         public_key: intasendPublishableKey,
         amount: amount,
         currency: 'KES',
         email: userEmail || 'payments@no-reply.local',
+        first_name: (userEmail?.split('@')[0] || 'User'),
+        last_name: 'Checkout',
+        country: 'KE',
         api_ref: payment.id,
-        method: ['CARD', 'MPESA'],
-        callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
         redirect_url: `${(req.headers.get('origin') || new URL(Deno.env.get('SUPABASE_URL') || '').origin)}/billing`,
       }),
     });
