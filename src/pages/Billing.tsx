@@ -14,6 +14,7 @@ const Billing = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadBillingData();
@@ -79,6 +80,7 @@ const Billing = () => {
 
   const handlePurchase = async (plan: any) => {
     setSelectedPlan(plan);
+    setCheckoutUrl(null);
     setShowPaymentModal(true);
   };
 
@@ -112,16 +114,16 @@ const Billing = () => {
       }
 
       if (data?.intasendUrl) {
-        console.log('Opening Intasend checkout in a new tab');
+        console.log('Checkout URL ready');
         const url = data.intasendUrl as string;
-        // Prefer opening a new tab to avoid X-Frame-Options in preview iframe
+        setCheckoutUrl(url);
+        // Try to open in a new tab, but also show a clickable link in case popup is blocked
         const opened = window.open(url, '_blank', 'noopener,noreferrer');
         if (!opened) {
-          // Fallback to top-level navigation
-          try { (window.top || window).location.assign(url); } catch { window.location.assign(url); }
+          toast.info('Popup blocked. Use the "Open Checkout" button to continue.');
+        } else {
+          toast.info('Checkout opened in a new tab. Complete payment then return here.');
         }
-        setShowPaymentModal(false);
-        toast.info('Checkout opened in a new tab. Complete payment then return here.');
       } else {
         throw new Error('Failed to initialize payment');
       }
@@ -278,11 +280,24 @@ const Billing = () => {
                   Supports M-Pesa, card payments, and other payment methods.
                 </p>
               </div>
+              {checkoutUrl && (
+                <a
+                  href={checkoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-primary text-primary-foreground h-10 px-4 font-medium"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Open Checkout
+                </a>
+              )}
 
-              <Button onClick={processPayment} className="w-full glow-primary">
-                <CreditCard className="mr-2 h-4 w-4" />
-                Proceed to Payment
-              </Button>
+              {!checkoutUrl && (
+                <Button onClick={processPayment} className="w-full glow-primary">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Proceed to Payment
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
