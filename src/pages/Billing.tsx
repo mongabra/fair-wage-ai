@@ -6,7 +6,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { toast } from "sonner";
 import { CreditCard, CheckCircle, Zap, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Billing = () => {
   const [company, setCompany] = useState<any>(null);
@@ -112,9 +112,16 @@ const Billing = () => {
       }
 
       if (data?.intasendUrl) {
-        console.log('Redirecting to Intasend payment page');
-        // Redirect to Intasend payment page
-        window.location.href = data.intasendUrl;
+        console.log('Opening Intasend checkout in a new tab');
+        const url = data.intasendUrl as string;
+        // Prefer opening a new tab to avoid X-Frame-Options in preview iframe
+        const opened = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!opened) {
+          // Fallback to top-level navigation
+          try { (window.top || window).location.assign(url); } catch { window.location.assign(url); }
+        }
+        setShowPaymentModal(false);
+        toast.info('Checkout opened in a new tab. Complete payment then return here.');
       } else {
         throw new Error('Failed to initialize payment');
       }
@@ -249,6 +256,7 @@ const Billing = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Complete Payment</DialogTitle>
+              <DialogDescription>We’ll open a secure Intasend checkout page in a new tab.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="text-center py-6">
