@@ -41,21 +41,42 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('Auth error:', authError);
+    // Decode user from JWT without additional auth call
+    const token = authHeader.replace('Bearer', '').trim();
+    const parts = token.split('.');
+    if (parts.length < 2) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid or expired token' }),
+        JSON.stringify({ error: 'Unauthorized - Invalid token format' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('User authenticated:', user.id);
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    let payload: any;
+    try {
+      payload = JSON.parse(atob(base64));
+    } catch (_) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Could not parse token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId: string | undefined = payload?.sub;
+    const userEmail: string | undefined = payload?.email;
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing user in token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('User authenticated:', userId);
 
     const { planName, amount, credits, companyId }: PaymentRequest = await req.json();
     
-    console.log('Payment request:', { planName, amount, credits, companyId, userId: user.id });
+    console.log('Payment request:', { planName, amount, credits, companyId, userId });
 
     // Verify company ownership
     const { data: company, error: companyError } = await supabaseClient
@@ -64,7 +85,7 @@ serve(async (req) => {
       .eq('id', companyId)
       .single();
 
-    if (companyError || !company || company.created_by !== user.id) {
+    if (companyError || !company || company.created_by !== userId) {
       console.error('Company verification failed:', companyError);
       return new Response(
         JSON.stringify({ error: 'Company not found or unauthorized' }),
@@ -120,7 +141,7 @@ serve(async (req) => {
         public_key: intasendPublishableKey,
         amount: amount,
         currency: 'KES',
-        email: user.email,
+        email: userEmail || 'payments@no-reply.local',
         api_ref: payment.id,
         callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
         redirect_url: `${(req.headers.get('origin') || new URL(Deno.env.get('SUPABASE_URL') || '').origin)}/billing`,

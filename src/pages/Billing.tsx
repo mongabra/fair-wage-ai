@@ -94,13 +94,15 @@ const Billing = () => {
 
       console.log('Initiating payment with auth token');
 
-      // Call edge function to initialize Intasend payment
       const { data, error } = await supabase.functions.invoke('intasend-payment', {
         body: {
           planName: selectedPlan.name,
           amount: selectedPlan.price,
           credits: selectedPlan.credits,
           companyId: company.id,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
