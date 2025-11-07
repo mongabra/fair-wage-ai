@@ -86,38 +86,30 @@ const Billing = () => {
     if (!company || !selectedPlan) return;
 
     try {
-      // In a real implementation, this would integrate with Stripe
-      // For now, we'll simulate a successful payment
-      
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          company_id: company.id,
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to continue");
+        return;
+      }
+
+      // Call edge function to initialize Intasend payment
+      const { data, error } = await supabase.functions.invoke('intasend-payment', {
+        body: {
+          planName: selectedPlan.name,
           amount: selectedPlan.price,
-          currency: 'KES',
-          status: 'completed',
-          payment_method: 'stripe',
-          credits_purchased: selectedPlan.credits,
-        });
+          credits: selectedPlan.credits,
+          companyId: company.id,
+        },
+      });
 
-      if (paymentError) throw paymentError;
+      if (error) throw error;
 
-      // Update subscription credits
-      const newCredits = (subscription?.credits_remaining || 0) + selectedPlan.credits;
-      const { error: subError } = await supabase
-        .from('subscriptions')
-        .update({
-          credits_remaining: newCredits,
-          total_credits: newCredits,
-          tier: selectedPlan.name.toLowerCase(),
-        })
-        .eq('company_id', company.id);
-
-      if (subError) throw subError;
-
-      toast.success(`Successfully purchased ${selectedPlan.credits} credits!`);
-      setShowPaymentModal(false);
-      loadBillingData();
+      if (data?.intasendUrl) {
+        // Redirect to Intasend payment page
+        window.location.href = data.intasendUrl;
+      } else {
+        throw new Error('Failed to initialize payment');
+      }
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("Payment failed. Please try again.");
@@ -264,16 +256,16 @@ const Billing = () => {
 
               <div className="p-4 rounded-lg bg-muted/50">
                 <p className="text-sm text-muted-foreground mb-2">
-                  In a production environment, this would integrate with Stripe for secure payment processing.
+                  You will be redirected to Intasend to complete your payment securely.
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  For demo purposes, clicking "Complete Payment" will simulate a successful transaction.
+                  Supports M-Pesa, card payments, and other payment methods.
                 </p>
               </div>
 
               <Button onClick={processPayment} className="w-full glow-primary">
                 <CreditCard className="mr-2 h-4 w-4" />
-                Complete Payment
+                Proceed to Payment
               </Button>
             </div>
           </DialogContent>

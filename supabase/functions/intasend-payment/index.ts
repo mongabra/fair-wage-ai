@@ -1,0 +1,141 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface PaymentRequest {
+  planName: string;
+  amount: number;
+  credits: number;
+  companyId: string;
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { planName, amount, credits, companyId }: PaymentRequest = await req.json();
+    
+    console.log('Payment request:', { planName, amount, credits, companyId, userId: user.id });
+
+    // Verify company ownership
+    const { data: company, error: companyError } = await supabaseClient
+      .from('companies')
+      .select('id, created_by')
+      .eq('id', companyId)
+      .single();
+
+    if (companyError || !company || company.created_by !== user.id) {
+      console.error('Company verification failed:', companyError);
+      return new Response(
+        JSON.stringify({ error: 'Company not found or unauthorized' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create payment record
+    const { data: payment, error: paymentError } = await supabaseClient
+      .from('payments')
+      .insert({
+        company_id: companyId,
+        amount,
+        credits_purchased: credits,
+        status: 'pending',
+        payment_method: 'intasend',
+      })
+      .select()
+      .single();
+
+    if (paymentError || !payment) {
+      console.error('Payment creation failed:', paymentError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create payment record' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Initialize Intasend payment
+    const intasendPublishableKey = Deno.env.get('INTASEND_PUBLISHABLE_KEY');
+    const intasendSecretKey = Deno.env.get('INTASEND_SECRET_KEY');
+
+    if (!intasendPublishableKey || !intasendSecretKey) {
+      console.error('Intasend keys not configured');
+      return new Response(
+        JSON.stringify({ error: 'Payment provider not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create Intasend collection
+    const intasendResponse = await fetch('https://payment.intasend.com/api/v1/payment/collection/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${intasendSecretKey}`,
+      },
+      body: JSON.stringify({
+        public_key: intasendPublishableKey,
+        amount: amount,
+        currency: 'KES',
+        email: user.email,
+        api_ref: payment.id,
+        callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
+        redirect_url: `${Deno.env.get('SUPABASE_URL')}/billing`,
+      }),
+    });
+
+    if (!intasendResponse.ok) {
+      const errorData = await intasendResponse.text();
+      console.error('Intasend API error:', errorData);
+      return new Response(
+        JSON.stringify({ error: 'Failed to initialize payment' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const intasendData = await intasendResponse.json();
+    console.log('Intasend payment initialized:', intasendData);
+
+    return new Response(
+      JSON.stringify({
+        paymentId: payment.id,
+        intasendUrl: intasendData.url,
+        intasendRef: intasendData.id,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error in intasend-payment function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
