@@ -143,6 +143,7 @@ serve(async (req) => {
         currency: 'KES',
         email: userEmail || 'payments@no-reply.local',
         api_ref: payment.id,
+        method: ['CARD', 'MPESA'],
         callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
         redirect_url: `${(req.headers.get('origin') || new URL(Deno.env.get('SUPABASE_URL') || '').origin)}/billing`,
       }),
