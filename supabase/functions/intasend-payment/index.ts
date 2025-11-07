@@ -19,12 +19,24 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
+    
+    if (!authHeader) {
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
@@ -34,10 +46,12 @@ serve(async (req) => {
     if (authError || !user) {
       console.error('Auth error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized - Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('User authenticated:', user.id);
 
     const { planName, amount, credits, companyId }: PaymentRequest = await req.json();
     
@@ -105,7 +119,7 @@ serve(async (req) => {
         email: user.email,
         api_ref: payment.id,
         callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
-        redirect_url: `${Deno.env.get('SUPABASE_URL')}/billing`,
+        redirect_url: req.headers.get('origin') || req.headers.get('referer') || 'https://a925e588-5372-49b6-8d8f-0eca369544de.lovableproject.com/billing',
       }),
     });
 

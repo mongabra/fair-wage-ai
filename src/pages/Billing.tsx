@@ -92,6 +92,8 @@ const Billing = () => {
         return;
       }
 
+      console.log('Initiating payment with auth token');
+
       // Call edge function to initialize Intasend payment
       const { data, error } = await supabase.functions.invoke('intasend-payment', {
         body: {
@@ -102,9 +104,13 @@ const Billing = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
       if (data?.intasendUrl) {
+        console.log('Redirecting to Intasend payment page');
         // Redirect to Intasend payment page
         window.location.href = data.intasendUrl;
       } else {
