@@ -93,7 +93,7 @@ serve(async (req) => {
       );
     }
 
-    // Initialize Intasend payment
+    // Initialize Intasend keys
     const intasendPublishableKey = Deno.env.get('INTASEND_PUBLISHABLE_KEY');
     const intasendSecretKey = Deno.env.get('INTASEND_SECRET_KEY');
 
@@ -105,8 +105,12 @@ serve(async (req) => {
       );
     }
 
-    // Create Intasend collection
-    const intasendResponse = await fetch('https://payment.intasend.com/api/v1/payment/collection/', {
+    // Determine Intasend environment (default to test/sandbox)
+    const envMode = (Deno.env.get('INTASEND_ENV') || 'test').toLowerCase();
+    const baseUrl = envMode === 'live' ? 'https://payment.intasend.com' : 'https://sandbox.intasend.com';
+
+    // Create Intasend collection (sandbox/live based on env)
+    const intasendResponse = await fetch(`${baseUrl}/api/v1/payment/collection/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,7 +123,7 @@ serve(async (req) => {
         email: user.email,
         api_ref: payment.id,
         callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/intasend-webhook`,
-        redirect_url: req.headers.get('origin') || req.headers.get('referer') || 'https://a925e588-5372-49b6-8d8f-0eca369544de.lovableproject.com/billing',
+        redirect_url: `${(req.headers.get('origin') || new URL(Deno.env.get('SUPABASE_URL') || '').origin)}/billing`,
       }),
     });
 
