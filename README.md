@@ -3,6 +3,8 @@
 ![SDG](https://img.shields.io/badge/SDG-8%20%7C%20Decent%20Work%20and%20Economic%20Growth-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+**🌐 Live Demo**: [https://malipohaki.lovable.app](https://malipohaki.lovable.app)
+
 ## 🧭 Overview
 **MalipoHaki** is an AI-powered web application that helps **employees** and **companies** evaluate the fairness of wages in relation to industry standards, education level, work experience, and location.  
 The project contributes to **UN Sustainable Development Goal 8 – Decent Work and Economic Growth**, promoting transparency and equity in compensation practices.
