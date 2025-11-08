@@ -59,20 +59,20 @@ const Billing = () => {
   const plans = [
     {
       name: "Starter",
-      price: 5000,
+      price: 1500,
       credits: 10,
       features: ["10 wage assessments", "Basic analytics", "Email support"],
     },
     {
       name: "Professional",
-      price: 15000,
+      price: 2999,
       credits: 50,
       features: ["50 wage assessments", "Advanced analytics", "Priority support", "Export reports"],
       popular: true,
     },
     {
       name: "Enterprise",
-      price: 40000,
+      price: 15000,
       credits: 200,
       features: ["200 wage assessments", "Premium analytics", "24/7 support", "Custom reports", "API access"],
     },
