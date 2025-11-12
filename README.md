@@ -17,7 +17,7 @@
 | ![Dashboard](Images/dashboard.png) | **Dashboard:** Displays summarized data insights, employee analytics, and recent activities. |
 | ![Company Section](Images/company.png) | **Company Section:** Where employers register, manage staff, and process wage-related actions. |
 | ![Payment Section](Images/Billing%20with%20intasend.png) | **Payment Interface:** Streamlined integration with payment systems (IntaSend). |
-| ![Reports View](Images/Fairness.png) | **Reports & Insights:** Visualization of payroll summaries, compliance data, and payment tracking. |
+| ![Analyze Wage](Images/Fairness.png) | **Wage Analysis:** Wage analysis section to check for fairness.User inputs salary details as the AI model analyses and provides results. |
 | ![About Section](Images/about.png) | **App Overview and purpose:** Showcase of furher details of the web app, its purpose and role. |
 
 ---
