@@ -8,6 +8,25 @@
 
 ---
 
+## 🖼️ Project Screenshots
+
+| Screenshot | Description |
+|-------------|--------------|
+| ![Home Page](Images/Landing%20page.png) | **Home Page:** Overview of the MalipoHaki system showing navigation and key highlights. |
+| ![Login Screen](Images/LogIn.png) | **Login Page:** Secure login interface for administrators and users. |
+| ![Dashboard](Images/dashboard.png) | **Dashboard:** Displays summarized data insights, employee analytics, and recent activities. |
+| ![Company Section](Images/company.png) | **Company Section:** Where employers register, manage staff, and process wage-related actions. |
+| ![Payment Section](Images/Billing%20with%20intasend.png) | **Payment Interface:** Streamlined integration with payment systems (IntaSend). |
+| ![Reports View](Images/Fairness.png) | **Reports & Insights:** Visualization of payroll summaries, compliance data, and payment tracking. |
+| ![About Section](Images/about.png) | **App Overview and purpose:** Showcase of furher details of the web app, its purpose and role. |
+
+---
+## 🎥 Project Demo
+Watch the full demo on [Google Drive](https://drive.google.com/file/d/1SbjzQM5soD3XlezKZFc6P42ofiVjwDN6/view?usp=sharing)
+
+---
+
+
 ## 🧭 Overview
 **MalipoHaki** is an **AI-powered web application** that helps **employees** and **companies** evaluate the fairness of wages relative to education, experience, industry standards, and location.  
 Built in support of **UN Sustainable Development Goal 8 – Decent Work and Economic Growth**, it promotes **transparency, fairness, and accountability** in Kenya’s job market.
@@ -38,7 +57,7 @@ Built in support of **UN Sustainable Development Goal 8 – Decent Work and Econ
 
 ### 💳 Payment Integration
 - Secure, simplified checkout for HR departments.  
-- Currently integrating **InstaSend (sandbox)**, with future support for **Stripe** or **Paystack**.
+- Currently integrating **InstaSend (sandbox)**.
 
 ---
 
@@ -113,13 +132,13 @@ npm install
 npm run dev
 ```
 
-## 🧠 Future Enhancements
--📊 Visual wage dashboards & analytics
--📍 Geolocation-based cost-of-living adjustments
--📁 CSV upload for HR bulk assessments
--🗣️ Multilingual support (Swahili & English)
--🔍 Fine-tuned Kenyan Wage AI Model trained on real local data
--🧾 Integration with National Labor & Policy Databases
+### 🧠 Future Enhancements
+- 📊 Visual wage dashboards & analytics
+- 📍 Geolocation-based cost-of-living adjustments
+- 📁 CSV upload for HR bulk assessments
+- 🗣️ Multilingual support (Swahili & English)
+- 🔍 Fine-tuned Kenyan Wage AI Model trained on real local data
+- 🧾 Integration with National Labor & Policy Databases
 
 ## 🤝 Contributing
 Contributions are welcome! Fork the repo, create a new branch, and open a pull request describing your improvement.
